@@ -3,3 +3,6 @@
 node find-asn.js google.com
 
 - Add ASN number to update.js > const SERVICES 
+
+- If Change Worker File Then :
+ wrangler deploy

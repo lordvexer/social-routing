@@ -77,7 +77,6 @@ export default {
     }
 
 
-output = "# META TEST\n" + output;
     return new Response(
       output,
       {
