@@ -22,6 +22,12 @@ const SERVICES = {
 
     bytedance: {
         asn: 396986
+    },
+    Perplexity: {
+        asn: 13335
+    },
+    Notion: {
+        asn: 33191
     }
 
 };
