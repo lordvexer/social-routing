@@ -1,170 +1,78 @@
 export default {
 
-  async fetch(request, env, ctx) {
+async fetch(request, env, ctx) {
 
 
-    const githubRawURL =
-      env.GITHUB_JSON_URL;
+const source = env.GITHUB_JSON_URL;
 
 
+const response =
+await fetch(source);
 
-    if (!githubRawURL) {
 
-      return new Response(
-        JSON.stringify({
-          error: "GITHUB_JSON_URL missing"
-        }),
-        {
-          status:500,
-          headers:{
-            "content-type":"application/json"
-          }
-        }
-      );
+if(!response.ok){
 
-    }
+return new Response(
+"GitHub unavailable",
+{
+status:502
+}
+);
 
+}
 
 
-    const cache =
-      caches.default;
 
+const data =
+await response.json();
 
 
-    const cacheKey =
-      new Request(
-        request.url,
-        request
-      );
 
+let output = "";
 
 
-    let cached =
-      await cache.match(cacheKey);
 
+for(
+const service in data
+){
 
 
-    if (cached) {
+for(
+const cidr of data[service]
+){
 
 
-      return cached;
+output += cidr + "|" + service + "\n";
 
-    }
 
+}
 
 
-    const response =
-      await fetch(
-        githubRawURL,
-        {
-          headers:{
-            "User-Agent":
-            "Cloudflare-Worker-Social-Routing"
-          }
-        }
-      );
+}
 
 
 
-    if (!response.ok) {
+return new Response(
 
+output,
 
-      return new Response(
+{
 
-        JSON.stringify({
-          error:
-          "GitHub source unavailable"
-        }),
+headers:{
 
-        {
-          status:502,
+"content-type":
+"text/plain",
 
-          headers:{
-            "content-type":
-            "application/json"
-          }
-        }
+"cache-control":
+"public,max-age=21600"
 
-      );
+}
 
-    }
+}
 
+);
 
 
-    const data =
-      await response.json();
-
-
-
-    const output = [];
-
-
-
-    for (
-      const service in data
-    ) {
-
-
-      for (
-        const cidr of data[service]
-      ) {
-
-
-        output.push({
-
-          address:cidr,
-
-          comment:service
-
-        });
-
-
-      }
-
-
-    }
-
-
-
-    const result =
-      new Response(
-
-        JSON.stringify(
-          output
-        ),
-
-        {
-
-          headers:{
-
-            "content-type":
-            "application/json",
-
-            "cache-control":
-            "public, max-age=21600"
-
-          }
-
-        }
-
-      );
-
-
-
-    ctx.waitUntil(
-
-      cache.put(
-        cacheKey,
-        result.clone()
-      )
-
-    );
-
-
-
-    return result;
-
-
-  }
+}
 
 };
