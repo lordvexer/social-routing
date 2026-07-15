@@ -2,7 +2,7 @@ export default {
   async fetch(request) {
 
     const github =
-    "https://raw.githubusercontent.com/USERNAME/social-routing/main/social.json";
+    "https://raw.githubusercontent.com/lordvexer/social-routing/refs/heads/main/social.json";
 
 
     const response = await fetch(github);
