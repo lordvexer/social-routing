@@ -77,7 +77,7 @@ export default {
     }
 
 
-
+output = "# META TEST\n" + output;
     return new Response(
       output,
       {
@@ -86,7 +86,7 @@ export default {
           "text/plain; charset=utf-8",
 
           "cache-control":
-          "public,max-age=21600"
+          "no-store"
         }
       }
     );
