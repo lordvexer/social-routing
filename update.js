@@ -1,6 +1,5 @@
 import fs from "fs/promises";
 import axios from "axios";
-import ipaddr from "ipaddr.js";
 
 
 const SERVICES = {
@@ -28,146 +27,144 @@ const SERVICES = {
 };
 
 
-
-const OUTPUT = "./social.json";
-
+const OUTPUT_FILE = "./social.json";
 
 
-async function getPrefixes(asn) {
+
+const http = axios.create({
+
+    timeout: 30000,
+
+    headers: {
+
+        "User-Agent":
+        "social-routing-updater/1.0"
+
+    }
+
+});
+
+
+
+async function getASNPrefixes(asn) {
+
 
     const url =
-    `https://api.bgpview.io/asn/${asn}/prefixes`;
+    `https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS${asn}`;
+
 
 
     const response =
-    await axios.get(url,{
-        timeout:15000,
-        headers:{
-            "User-Agent":
-            "social-routing-updater"
-        }
-    });
+    await http.get(url);
 
 
-    if(
-        !response.data ||
-        !response.data.data ||
-        !response.data.data.ipv4_prefixes
-    ){
+
+    const prefixes =
+    response.data?.data?.prefixes;
+
+
+
+    if (!Array.isArray(prefixes)) {
 
         return [];
 
     }
 
 
-    return response
-    .data
-    .data
-    .ipv4_prefixes
-    .map(
-        x => x.prefix
-    );
 
-}
+    return prefixes
 
+        .map(
+            item => item.prefix
+        )
 
-
-
-function validCIDR(cidr){
-
-
-    try {
-
-        const parts =
-        cidr.split("/");
-
-
-        const ip =
-        ipaddr.parse(parts[0]);
-
-
-        return (
-            ip.kind() === "ipv4" &&
-            Number(parts[1]) >= 0 &&
-            Number(parts[1]) <= 32
+        .filter(
+            prefix =>
+            typeof prefix === "string" &&
+            prefix.includes(".")
         );
 
+}
 
-    }
-    catch(e){
 
-        return false;
 
-    }
+
+function cleanPrefixes(prefixes) {
+
+
+    return [
+
+        ...new Set(prefixes)
+
+    ];
 
 }
 
 
 
 
-
-async function build(){
-
-
-    const output={};
+async function main() {
 
 
-    for(
-        const [name,service]
+    console.log(
+        "Starting social prefix update..."
+    );
+
+
+    const output = {};
+
+
+
+    for (
+        const [name, config]
         of Object.entries(SERVICES)
-    ){
+    ) {
 
 
         console.log(
-            `Updating ${name}`
+            `Updating ${name} AS${config.asn}`
         );
 
-
-        let prefixes=[];
 
 
         try {
 
 
-            prefixes =
-            await getPrefixes(
-                service.asn
+            const prefixes =
+            await getASNPrefixes(
+                config.asn
+            );
+
+
+
+            output[name] =
+            cleanPrefixes(prefixes);
+
+
+
+            console.log(
+
+                `${name}: ${output[name].length} IPv4 prefixes`
+
             );
 
 
         }
-        catch(error){
+
+        catch(error) {
 
 
             console.error(
-                `Failed ${name}`,
+
+                `${name} failed:`,
                 error.message
+
             );
 
 
-            continue;
+            output[name] = [];
 
         }
-
-
-
-        prefixes =
-        prefixes
-        .filter(validCIDR);
-
-
-
-        prefixes =
-        [...new Set(prefixes)];
-
-
-
-        output[name]=prefixes;
-
-
-        console.log(
-            `${name}: ${prefixes.length} prefixes`
-        );
 
 
     }
@@ -176,12 +173,16 @@ async function build(){
 
     await fs.writeFile(
 
-        OUTPUT,
+        OUTPUT_FILE,
 
         JSON.stringify(
+
             output,
+
             null,
+
             2
+
         ),
 
         "utf8"
@@ -191,7 +192,7 @@ async function build(){
 
 
     console.log(
-        "social.json updated"
+        "social.json generated successfully"
     );
 
 
@@ -199,10 +200,19 @@ async function build(){
 
 
 
-build()
+main()
 .catch(
-    err=>{
-        console.error(err);
+
+    error => {
+
+        console.error(
+            "Fatal error:",
+            error
+        );
+
+
         process.exit(1);
+
     }
+
 );
