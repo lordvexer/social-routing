@@ -1,34 +1,114 @@
 export default {
-  async fetch(request) {
 
-    const github =
-    "https://raw.githubusercontent.com/lordvexer/social-routing/refs/heads/main/social.json";
+  async fetch(request, env, ctx) {
 
 
-    const response = await fetch(github);
+    const githubRawURL =
+      env.GITHUB_JSON_URL;
 
 
-    if (!response.ok) {
+
+    if (!githubRawURL) {
 
       return new Response(
-        "GitHub list unavailable",
+        JSON.stringify({
+          error: "GITHUB_JSON_URL missing"
+        }),
         {
-          status:500
+          status:500,
+          headers:{
+            "content-type":"application/json"
+          }
         }
       );
 
     }
 
 
-    const data = await response.json();
+
+    const cache =
+      caches.default;
 
 
-    let output = [];
+
+    const cacheKey =
+      new Request(
+        request.url,
+        request
+      );
 
 
-    for (const service in data) {
 
-      for (const cidr of data[service]) {
+    let cached =
+      await cache.match(cacheKey);
+
+
+
+    if (cached) {
+
+
+      return cached;
+
+    }
+
+
+
+    const response =
+      await fetch(
+        githubRawURL,
+        {
+          headers:{
+            "User-Agent":
+            "Cloudflare-Worker-Social-Routing"
+          }
+        }
+      );
+
+
+
+    if (!response.ok) {
+
+
+      return new Response(
+
+        JSON.stringify({
+          error:
+          "GitHub source unavailable"
+        }),
+
+        {
+          status:502,
+
+          headers:{
+            "content-type":
+            "application/json"
+          }
+        }
+
+      );
+
+    }
+
+
+
+    const data =
+      await response.json();
+
+
+
+    const output = [];
+
+
+
+    for (
+      const service in data
+    ) {
+
+
+      for (
+        const cidr of data[service]
+      ) {
+
 
         output.push({
 
@@ -38,27 +118,53 @@ export default {
 
         });
 
+
       }
+
 
     }
 
 
-    return new Response(
-      JSON.stringify(output),
-      {
 
-        headers:{
+    const result =
+      new Response(
 
-          "content-type":
-          "application/json",
+        JSON.stringify(
+          output
+        ),
 
-          "cache-control":
-          "no-cache"
+        {
+
+          headers:{
+
+            "content-type":
+            "application/json",
+
+            "cache-control":
+            "public, max-age=21600"
+
+          }
 
         }
 
-      }
+      );
+
+
+
+    ctx.waitUntil(
+
+      cache.put(
+        cacheKey,
+        result.clone()
+      )
+
     );
 
+
+
+    return result;
+
+
   }
-}
+
+};
