@@ -50,8 +50,7 @@ jobs:
           git commit -m "chore: update social IP lists"
 
           for attempt in 1 2 3; do
-            git pull --rebase origin main
-
+          git pull --rebase --autostash origin main
             if git push origin HEAD:main; then
               echo "social.json pushed successfully."
               exit 0
