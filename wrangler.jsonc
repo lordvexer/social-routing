@@ -1,15 +1,10 @@
+// wrangler.jsonc
 {
   "name": "social-routing",
-
   "main": "worker.js",
-
   "compatibility_date": "2026-07-15",
-
   "vars": {
-
     "GITHUB_JSON_URL":
-    "https://raw.githubusercontent.com/lordvexer/social-routing/refs/heads/main/social.json"
-
+      "https://raw.githubusercontent.com/lordvexer/social-routing/refs/heads/main/social.json"
   }
-
 }
