@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "generatedAt": "2026-09-16T04:02:51.315Z",
+    "generatedAt": "2026-09-16T11:07:56.958Z",
     "source": "RIPEstat announced-prefixes",
     "format": "dual-stack-v1"
   },
@@ -6743,9 +6743,6 @@
       "2400:cb00:be82::/48",
       "2400:cb00:be83::/48",
       "2400:cb00:be84::/48",
-      "2400:cb00:beb1::/48",
-      "2400:cb00:beb2::/48",
-      "2400:cb00:beb3::/48",
       "2400:cb00:bec1::/48",
       "2400:cb00:bec2::/48",
       "2400:cb00:bec3::/48",
